@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "../context/Context";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
   const [credentials, setCredentials] = useState({ email: "", contraseña: "" });
   const { login } = useAuth();
+  const navigate = useNavigate();
+
 
   const handleChange = (e) => {
     setCredentials((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -15,6 +17,7 @@ function Login() {
     try {
       await login(credentials);
       alert("Inicio de sesión exitoso");
+      navigate('/perfil');
     } catch (error) {
       alert(error.message);
     }
@@ -31,7 +34,7 @@ function Login() {
                 <div className="flex flex-col gap-5 m-3">
                     <div>
                     <p>Email</p>
-                    <input name="email" onChange={handleChange} placeholder="example@gmail.com" 
+                    <input name="correo" onChange={handleChange} placeholder="example@gmail.com" 
                     className="border-2 rounded-sm"/>
                 </div>
                 <div>

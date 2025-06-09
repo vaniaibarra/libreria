@@ -6,12 +6,11 @@ function Register () {
   const [credentials, setCredentials] = useState({
     nombre: "",
     apellido: "",
-    email: "",
+    correo: "",
     username: "",
     ciudad: "",
     region: "",
-    password: "",
-    repetePassword: ""
+    contraseña: ""
   })
   const { register } = useAuth()
 
@@ -22,10 +21,6 @@ function Register () {
    
   const handleSubmit = async (e) => {
     e.preventDefault(); 
-    if (credentials.password !== credentials.repetePassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
 
     try {
       await register(credentials);
@@ -51,12 +46,12 @@ function Register () {
               </div>
               <div>
                 <p>Apellido</p>
-                <input name="apellido" type="email" onChange={handleChange} placeholder="perez" 
+                <input name="apellido" onChange={handleChange} placeholder="perez" 
                 className="border-2 rounded-sm" />
               </div>
               <div>
                 <p>Correo</p>
-                <input name="email" type="email" onChange={handleChange} placeholder="example@gmail.com" 
+                <input name="correo" type="email" onChange={handleChange} placeholder="example@gmail.com" 
                 className="border-2 rounded-sm" />
               </div>
               <div>
@@ -76,12 +71,7 @@ function Register () {
               </div>
               <div>
                 <p>Contraseña</p>
-                <input name="password" type="password" onChange={handleChange} placeholder="*******" 
-                className="border-2 rounded-sm" />
-              </div>
-              <div>
-                <p>Repetir contraseña</p>
-                <input name="repetePassword" type="password" onChange={handleChange} placeholder="*******" 
+                <input name="contraseña" type="password" onChange={handleChange} placeholder="*******" 
                 className="border-2 rounded-sm" />
               </div>
             </div>
