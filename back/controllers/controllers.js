@@ -56,27 +56,20 @@ const verificarUsuario = async ( req, res) => {
     }
 }
 
-const getUsuariosPorId = async ( req, res ) => {
+const getUsuariosPorId = async (req, res) => {
     try {
-        const header = req.header("Authorization")
-        const token = header?.split("Bearer ")[1]
+        const { id } = req.user; 
 
-        if ( !token) throw { code: 401, message: "Token no enviado" }
+        const usuario = await mostrarUsuariosPorId(id);
 
-        jwt.verify(token, SECRET_KEY)
-        const { id } = decoded
+        if (!usuario) throw { code: 404, message: "Usuario no encontrado" };
 
-        const usuario = await mostrarUsuariosPorId(id)
-
-        if(!usuario) throw { code: 404, message: "Usuario no encontrado"}
-
-        res.json(usuario)
+        res.json(usuario);
 
     } catch (error) {
-
-        res.status(error.code || 500).send({ error: error.message || error })
-
+        res.status(error.code || 500).send({ error: error.message || error });
     }
-}
+};
+
 
 module.exports = { getLibros, añadirUsuario, verificarUsuario, getUsuariosPorId };

@@ -9,7 +9,7 @@ const {
 const validarToken = require('../middleware/authMiddleware.js');
 
 routes.get("/tienda", validarToken, getLibros);
-routes.get("/users", validarToken, getUsuariosPorId);
+routes.get("/users/:id", validarToken, getUsuariosPorId);
 routes.post("/register", añadirUsuario);
 routes.post("/login", verificarUsuario);
 

@@ -29,19 +29,21 @@ const registrarUsuario = async ({correo, nombre, apellido, username, contraseña
 
 
 const inicioSesion = async (correo, contraseña) => {
-    const values = [correo]
-    const consulta = "SELECT * FROM usuarios WHERE correo = $1"
-    const { rows, rowCount } = await pool.query(consulta, values)
+    const { rows } = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo])
 
-    if(!rowCount) throw { code: 404, message: "Email no registrado"}
+    if (rows.length === 0) throw { code: 401, message: 'Email no registrado' }
 
-    const {id, correo: correoUsuario, contraseña: contraseñaEncriptada } = rows[0]
-    const contraseñaAprobada = bcrypt.compareSync(contraseña, contraseñaEncriptada)
+    const usuario = rows[0]
 
-    if(!contraseñaAprobada) throw { code: 401, message: "Contraseña incorrecta" }
+    const passwordEsValida = bcrypt.compareSync(contraseña, usuario.contraseña)
 
-    return { id, correo: correoUsuario }
+    if (!passwordEsValida) throw { code: 401, message: 'Contraseña incorrecta' }
+
+    delete usuario.contraseña
+
+    return usuario
 }
+
 
 const mostrarUsuariosPorId = async (id) => {
     const consulta = "SELECT * FROM usuarios WHERE id = $1"
