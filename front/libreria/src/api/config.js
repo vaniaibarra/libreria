@@ -1,4 +1,4 @@
-export const URLBASE = 'http://localhost:3000/libreria'
+export const URLBASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/libreria'
 
 export const ENDPOINT = {
     login: `${URLBASE}/login`,
