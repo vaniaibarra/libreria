@@ -5,7 +5,8 @@ const { pool } = require('./db/database.js')
 const librosRoutes = require('./routes/librosRoutes.js')
 const path = require('path')
 
-app.listen(3000, () => console.log('SERVER ON'))
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`SERVER ON en puerto ${PORT}`))
 
 app.use(express.json());
 
