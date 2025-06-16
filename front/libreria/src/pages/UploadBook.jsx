@@ -1,72 +1,102 @@
 import { useState } from "react";
-import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../context/Context";
+import { useNavigate } from "react-router-dom";
 
 function UploadBook() {
-  const [formData, setFormData] = useState({
+  const [bookInfo, setBookInfo] = useState({
     nombre: "",
     autor: "",
     idioma: "",
+    genero: "",
     precio: "",
     descripcion: "",
-    archivo: null,
+    img: null,
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const { newBook } = useAuth();
+  const navigate = useNavigate();
 
-  const handleFileChange = (e) => {
-    setFormData((prev) => ({ ...prev, archivo: e.target.files[0] }));
-  };
+const handleChange = (e) => {
+  const { name, value, files } = e.target;
+  setBookInfo((prev) => ({
+    ...prev,
+    [name]: files ? files[0] : value,
+  }));
+};
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    data.append("nombre", formData.nombre);
-    data.append("autor", formData.autor);
-    data.append("idioma", formData.idioma);
-    data.append("precio", formData.precio);
-    data.append("descripcion", formData.descripcion);
-    data.append("archivo", formData.archivo);
+    if (
+    !bookInfo.nombre ||
+    !bookInfo.autor ||
+    !bookInfo.idioma ||
+    !bookInfo.genero ||
+    !bookInfo.precio ||
+    !bookInfo.descripcion ||
+    !bookInfo.img
+  ) {
+    alert("Por favor, completa todos los campos incluyendo la imagen.");
+    return;
+  }
 
-     try {
-      const response = await axiosInstance.post("/stats", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      alert("Libro subido correctamente");
-      console.log(response.data); 
+    try {
+      await newBook(bookInfo);
+      alert("Libro publicado con éxito!")
+      navigate('/profile');
     } catch (error) {
-      console.error(error);
-      alert("Error al subir el libro");
+      alert(error.message || "Error al publicar el libro");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} encType="multipart/form-data">
-      <p>Nombre del libro</p>
-      <input name="nombre" onChange={handleChange} />
+    <>
+    <div className="m-7">
+        <p>Publica tu libro</p>
+        <form onSubmit={handleSubmit} className="mt-5 flex">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <p>Nombre del libro</p>
+              <input name="nombre" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+            <div>
+              <p>Autor/a</p>
+              <input name="autor" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+            <div>
+              <p>Idioma</p>
+              <input name="idioma" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+            <div>
+              <p>Género</p>
+              <input name="genero" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+            <div>
+              <p>Precio</p>
+              <input name="precio" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+            <div>
+              <p>Descripción</p>
+              <input name="descripcion" onChange={handleChange} className="border-2 rounded-sm" />
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <p>Imagen</p>
+            <input type="file" name="img" onChange={handleChange} />
+            <button type="submit" className="bg-blue-600 text-white rounded-sm p-2 w-1/5">Subir libro</button>
+            <button
+              type="button" 
+              onClick={() => navigate("/profile")}
+              className="bg-gray-400 text-white rounded-sm p-2 w-1/5 mt-2"
+            >
+              Cancelar
+            </button>
 
-      <p>Autor/a</p>
-      <input name="autor" onChange={handleChange} />
-
-      <p>Idioma</p>
-      <input name="idioma" onChange={handleChange} />
-
-      <p>Precio</p>
-      <input name="precio" onChange={handleChange} />
-
-      <p>Descripción</p>
-      <input name="descripcion" onChange={handleChange} />
-
-      <p>Archivo</p>
-      <input type="file" onChange={handleFileChange} />
-
-      <button type="submit">Subir libro</button>
-    </form>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
 

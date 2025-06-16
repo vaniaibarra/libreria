@@ -7,6 +7,8 @@ import BookDetail from "../pages/components/BookDetail";
 import BookStore from "../pages/BookStore";
 import ProtectedRoutes from "./ProtectedRoutes";
 import Register from "../pages/Register";
+import Edit from "../pages/Edit";
+import UploadBook from "../pages/UploadBook";
 
 function AppRoutes() {
   return (
@@ -14,6 +16,10 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register/>} />
+      <Route path="/edit" element={ <Edit/> } />
+      <Route path="/upload" element={ <UploadBook/> }/>
+      <Route path="/tienda" element={<BookStore/>}/>
+
       
       <Route
         path="/profile"

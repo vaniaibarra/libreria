@@ -17,7 +17,7 @@ function Login() {
     try {
       await login(credentials);
       alert("Inicio de sesión exitoso");
-      navigate('/perfil');
+      navigate('/tienda');
     } catch (error) {
       alert(error.message);
     }

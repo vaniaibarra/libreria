@@ -1,5 +1,5 @@
 const { error } = require('console');
-const { obtenerLibros, registrarUsuario, inicioSesion, mostrarUsuariosPorId } = require('../models/libreriaModel');
+const { obtenerLibros, registrarUsuario, inicioSesion, mostrarUsuariosPorId, modificarUsuario, publicarLibro, librosPorUsuario } = require('../models/libreriaModel');
 const jwt = require('jsonwebtoken')
 
 const SECRET_KEY = process.env.JWT_SECRET || 'clave_secreta'
@@ -33,6 +33,38 @@ const añadirUsuario = async (req, res) => {
     }
 }
 
+const editarPerfil = async (req, res) => {
+  try {
+    const id = req.usuario.id;
+    const { username, region, ciudad, descripcion } = req.body;
+    const avatar = req.file?.filename;
+
+    const usuarioActual = await mostrarUsuariosPorId(id);
+
+    const usernameActualizado = username || usuarioActual.username;
+    const regionActualizada = region || usuarioActual.region;
+    const ciudadActualizada = ciudad || usuarioActual.ciudad;
+    const descripcionActualizada = descripcion || usuarioActual.descripcion;
+    const avatarActualizado = avatar || usuarioActual.avatar;
+
+    await modificarUsuario(
+      id,
+      usernameActualizado,
+      regionActualizada,
+      ciudadActualizada,
+      descripcionActualizada,
+      avatarActualizado
+    );
+
+    const usuarioActualizado = await mostrarUsuariosPorId(id);
+    res.send({ usuario: usuarioActualizado });
+
+  } catch (error) {
+    res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
+  }
+};
+
+
 
 const verificarUsuario = async ( req, res) => {
     try {
@@ -49,7 +81,7 @@ const verificarUsuario = async ( req, res) => {
             { expiresIn: '1h'}
             )
 
-        res.send({token})
+        res.send({token, usuario})
 
     } catch (error) {
         res.status(error.code || 500).send(error)
@@ -71,5 +103,42 @@ const getUsuariosPorId = async (req, res) => {
     }
 };
 
+const subirLibro = async (req, res) => {
+    try {
+        const { id } = req.usuario;
+        const { nombre, autor, idioma, descripcion, precio, genero } = req.body;
+        const  img  = req.file?.filename
+        if ( !nombre || !autor || !idioma || !descripcion || !precio || !genero || !img ){
+            return res.status(400).json({ mensaje: 'Faltan campos obligatorios' });
+        }
 
-module.exports = { getLibros, añadirUsuario, verificarUsuario, getUsuariosPorId };
+        await publicarLibro({nombre, autor, idioma, descripcion, precio, genero, img }, id);
+        console.log('req.body:', req.body);
+        console.log('req.file:', req.file);
+
+        res.send("Libro publicado con éxito")
+    } catch (error) {
+        res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
+    }
+}
+
+const getLibrosUsuario = async (req, res) => {
+    try {
+        const { id } = req.usuario;
+        const libros = await librosPorUsuario(id);
+        res.json(libros)
+    } catch (error) {
+        res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
+    }
+} 
+
+
+module.exports = { 
+    getLibros, 
+    añadirUsuario, 
+    verificarUsuario, 
+    getUsuariosPorId, 
+    editarPerfil, 
+    subirLibro,
+    getLibrosUsuario,
+};

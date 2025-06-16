@@ -1,15 +1,17 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { loginUser, registerUser } from "../api/authService";
+import { editUser, getUserBooks, loginUser, registerUser, tienda, uploadBook } from "../api/authService";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
+  const [usuario, setUsuario] = useState(() => {
+    const savedUser = localStorage.getItem("usuario");
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [book, setBook] = useState([])
+  
 
   useEffect(() => {
     if (token) {
@@ -20,32 +22,57 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
+    if (usuario) {
+      localStorage.setItem("usuario", JSON.stringify(usuario));
     } else {
-      localStorage.removeItem("user");
+      localStorage.removeItem("usuario");
     }
-  }, [user]);
+  }, [usuario]);
 
   const login = async (credentials) => {
     const data = await loginUser(credentials);
     setToken(data.token);
-    setUser(data.user);
+    setUsuario(data.usuario);
+    localStorage.setItem('token', data.token);
   };
 
   const register = async (userData) => {
     const data = await registerUser(userData);
     setToken(data.token);
-    setUser(data.user);
+    setUsuario(data.usuario);
   };
+
+  const editProfile = async (userData) => {
+    const data = await editUser(userData);
+    setUsuario(data.usuario);
+  }
+
+  const newBook = async (bookData) => {
+    await uploadBook(bookData);
+  }
+
+  const userBooks = async () => {
+  if (!token) return; 
+  const data = await getUserBooks(token);
+  setBook(data);
+  }
+
+  const allBooks = async () => {
+    if(!token) return;
+    const data = await tienda(token);
+    setBook(data);
+  }
+
+
+
 
   const logout = () => {
     setToken(null);
-    setUser(null);
+    setUsuario(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ usuario, token, book, login, register, editProfile, newBook, logout, userBooks, allBooks }}>
       {children}
     </AuthContext.Provider>
   );

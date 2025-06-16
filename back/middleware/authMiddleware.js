@@ -13,7 +13,7 @@ const validarToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        req.user = decoded; 
+        req.usuario = decoded; 
         next();
     } catch (error) {
         console.error('Error al verificar token:', error);

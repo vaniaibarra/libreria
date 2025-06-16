@@ -27,6 +27,15 @@ const registrarUsuario = async ({correo, nombre, apellido, username, contraseña
     await pool.query(consulta, values)
 }
 
+const modificarUsuario = async (id, username, region, ciudad, descripcion, avatar) => {
+    const values = [username, region, ciudad, descripcion, avatar ,id];
+    const consulta = "UPDATE usuarios SET username = $1, region= $2, ciudad = $3, descripcion = $4, avatar = $5 WHERE id = $6 RETURNING *"
+
+    const result = await pool.query(consulta, values)
+    return result.rows[0];
+}
+
+
 
 const inicioSesion = async (correo, contraseña) => {
     const { rows } = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo])
@@ -46,10 +55,36 @@ const inicioSesion = async (correo, contraseña) => {
 
 
 const mostrarUsuariosPorId = async (id) => {
-    const consulta = "SELECT * FROM usuarios WHERE id = $1"
-    const values = [id]
-    const { rows } = await pool.query(consulta, values)
-    return rows[0]
+    const consulta = "SELECT id, username, region, ciudad, descripcion, avatar FROM usuarios WHERE id = $1"
+    const { rows } = await pool.query(consulta, [id]);
+    return rows[0];
 }
 
-module.exports = { obtenerLibros, registrarUsuario, inicioSesion, mostrarUsuariosPorId }
+const publicarLibro = async ({ nombre, autor, idioma, descripcion, precio, genero, img }, idUsuario) => {
+    const values = [nombre, autor, idioma, descripcion, precio, genero, img];
+    const consulta = `INSERT INTO publicaciones (nombre, autor, idioma, descripcion, precio, genero, img) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`;
+
+    const resultado = await pool.query(consulta, values);
+    const idPublicacion = resultado.rows[0].id;
+
+    const consultaDetalle = `INSERT INTO detalle_publicaciones (usuario_id, publicacion_id) VALUES ($1, $2)`;
+
+    await pool.query(consultaDetalle, [idUsuario, idPublicacion]);
+}
+
+const librosPorUsuario = async (id) => {
+    const consulta = 
+        `SELECT p.* FROM publicaciones p JOIN detalle_publicaciones dp ON p.id = dp.publicacion_id WHERE dp.usuario_id = $1`
+    const { rows } = await pool.query(consulta, [id]);
+    return rows;
+}
+
+module.exports = { 
+    obtenerLibros, 
+    registrarUsuario, 
+    inicioSesion, 
+    mostrarUsuariosPorId, 
+    modificarUsuario, 
+    publicarLibro,
+    librosPorUsuario
+ }

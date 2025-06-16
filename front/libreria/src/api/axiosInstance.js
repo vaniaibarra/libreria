@@ -3,9 +3,7 @@ import { URLBASE } from './config';
 
 const axiosInstance = axios.create({
     baseURL: URLBASE,
-    headers: {
-        'Content-Type': 'application/json'
-    },
+    
 });
 
 axiosInstance.interceptors.request.use((config) => {
