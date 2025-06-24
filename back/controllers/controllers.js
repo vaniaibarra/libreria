@@ -1,18 +1,30 @@
 const { error } = require('console');
-const { obtenerLibros, registrarUsuario, inicioSesion, mostrarUsuariosPorId, modificarUsuario, publicarLibro, librosPorUsuario } = require('../models/libreriaModel');
+const { obtenerLibros, registrarUsuario, inicioSesion, mostrarUsuariosPorId, modificarUsuario, publicarLibro, librosPorUsuario, seleccionarFiltro, filtrarGenero, filtrarLibros, obtenerLibro, modificarPublicacion, buscarConversacion, crearConversacion, crearMensaje, obtenerMensajesConversacion } = require('../models/libreriaModel');
 const jwt = require('jsonwebtoken')
 
 const SECRET_KEY = process.env.JWT_SECRET || 'clave_secreta'
 
-const getLibros = async ( req, res ) => {
-    try {
-        const queryStrings = req.query;
-        const publicaciones = await obtenerLibros(queryStrings);
-        res.json(publicaciones)
-    } catch (error) {
-        res.status(500).json({error: 'Error al cargar los libros', detalle: error.message})
-    }
-}
+
+const getLibros = async (req, res) => {
+  const {
+    limit = 40,
+    page = 1,
+    order_by = "id_ASC"
+  } = req.query;
+
+  try {
+    const libros = await obtenerLibros({
+      limit: Number(limit),
+      page: Number(page),
+      order_by
+    });
+
+    res.status(200).json(libros);
+  } catch (error) {
+    console.error("Error en controlador al obtener libros:", error.message);
+    res.status(500).json({ error: "Error al obtener libros" });
+  }
+};
 
 const añadirUsuario = async (req, res) => {
     try {
@@ -62,6 +74,40 @@ const editarPerfil = async (req, res) => {
   } catch (error) {
     res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
   }
+};
+
+const editarPublicacion = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { nombre, autor, idioma, descripcion, precio, genero } = req.body;
+        const img = req.file?.filename;
+
+        const publicacionActual = await obtenerLibro(id);
+        const nombreActualizado = nombre ?? publicacionActual.nombre;
+        const autorActualizado = autor ?? publicacionActual.autor;
+        const idiomaActualizado = idioma ?? publicacionActual.idioma;
+        const descripcionActualizada = descripcion ?? publicacionActual.descripcion;
+        const precioActualizado = precio ?? publicacionActual.precio;
+        const generoActualizado = genero ?? publicacionActual.genero;
+        const imgActualizada = img ?? publicacionActual.img;
+
+        await modificarPublicacion({
+            id,
+            nombre: nombreActualizado, 
+            autor: autorActualizado, 
+            idioma: idiomaActualizado, 
+            descripcion: descripcionActualizada, 
+            precio: precioActualizado, 
+            genero: generoActualizado, 
+            img: imgActualizada
+        })
+
+        const bookActualizado = await obtenerLibro(id);
+        res.send({book : bookActualizado});
+
+    } catch (error) {
+        res.status(error.status || 500).json({ mensaje: error.message || `Error al actualizar libro`})
+    }
 };
 
 
@@ -116,13 +162,24 @@ const subirLibro = async (req, res) => {
         console.log('req.body:', req.body);
         console.log('req.file:', req.file);
 
+
         res.send("Libro publicado con éxito")
     } catch (error) {
         res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
     }
 }
 
+const getGeneros = async (req, res) => {
+    try {
+        const result = await filtrarGenero();
+        res.json(result)
+    } catch (error) {
+        res.status(error.status || 500).json({ mensaje: error.message || `Error interno del servidor`})
+    }
+}
+
 const getLibrosUsuario = async (req, res) => {
+    
     try {
         const { id } = req.usuario;
         const libros = await librosPorUsuario(id);
@@ -130,7 +187,88 @@ const getLibrosUsuario = async (req, res) => {
     } catch (error) {
         res.status(error.status || 500).json({ mensaje: error.message || 'Error interno del servidor' });
     }
-} 
+}
+
+const getFiltros = async (req, res) => {
+    try {
+        const result = await seleccionarFiltro()
+        res.send(result)
+    } catch (error) {
+        res.status(error.status || 500).json({ mensaje: error.message || `Error interno del servidor` })
+    }
+}
+
+const getLibrosFiltrados = async (req, res) => {
+    try {
+        const { autor, precioMin, precioMax, genero, idioma } = req.query;
+        const result = await filtrarLibros({ autor, precioMin, precioMax, genero, idioma })
+        res.send(result);
+    } catch (error) {
+        res.status(error.status || 500).json({message: error.message || `Error interno del servidor`})
+    }
+}
+
+const getLibroPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const libro = await obtenerLibro(id)
+        res.json(libro)
+    } catch (error) {
+        res.status(error.status || 500).json({message: error.message || `Error interno del servidor`})
+    }
+};
+
+const nuevaConversacion = async (req, res) => {
+    const { usuario1, usuario2 } = req.body;
+    if (!usuario1 || !usuario2) {
+    return res.status(400).json({ error: "Faltan datos para crear la conversación" });
+  }
+    try {
+        const conversacionExistente = await buscarConversacion(usuario1, usuario2);
+        if(conversacionExistente.length > 0){
+            return res.status(200).json({
+                mensaje: 'La conversación ya existe',
+                conversacion: conversacionExistente[0]
+            });
+        };
+        const conversacionNueva = await crearConversacion(usuario1, usuario2);
+        res.status(201).json({
+            mensaje: 'Conversación creada con éxito',
+            conversacion: conversacionNueva
+        });
+    } catch (error) {
+        console.error("Error en mensajería", error);
+        res.status(500).json({ error: 'Error al crear conversación'});
+    }
+};
+
+const creacionMensaje = async (req, res) => {
+    const { conversacion_id, remitente_id, contenido } = req.body;
+    if(!conversacion_id || !remitente_id || !contenido ){
+        return res.status(400).json({error: 'Faltan datos requeridos'});
+    }
+
+    try {
+        const nuevoMensaje = await crearMensaje({conversacion_id, remitente_id, contenido});
+        res.status(201).json(nuevoMensaje)
+    } catch (error) {
+        console.error('Error al crear mensaje:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+}
+
+const obtenerMensajes = async (req, res) => {
+    const  { conversacion_id } = req.params;
+
+    try {
+        const mensajes = await obtenerMensajesConversacion(conversacion_id);
+        res.json(mensajes);
+    } catch (error) {
+        console.log("Error al obtener mensajes", error);
+        res.status(500).json({ error: 'Error al obtener mensajes'})
+    }
+};
+
 
 
 module.exports = { 
@@ -140,5 +278,13 @@ module.exports = {
     getUsuariosPorId, 
     editarPerfil, 
     subirLibro,
+    getGeneros,
     getLibrosUsuario,
+    getFiltros,
+    getLibrosFiltrados,
+    getLibroPorId,
+    editarPublicacion,
+    nuevaConversacion,
+    creacionMensaje,
+    obtenerMensajes
 };

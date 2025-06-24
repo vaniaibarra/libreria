@@ -10,18 +10,27 @@ function UploadBook() {
     genero: "",
     precio: "",
     descripcion: "",
-    img: null,
+    img: null
   });
 
+  const [preview, setPreview] = useState(null)
+
   const { newBook } = useAuth();
+  const { generos } = useAuth();
   const navigate = useNavigate();
 
 const handleChange = (e) => {
   const { name, value, files } = e.target;
-  setBookInfo((prev) => ({
+  if(name === "img" && files[0]){
+    const file = files[0];
+    setBookInfo((prev) => ({...prev, img: file}));
+    setPreview(URL.createObjectURL(file));
+  }else{
+    setBookInfo((prev) => ({
     ...prev,
     [name]: files ? files[0] : value,
   }));
+  }
 };
 
 
@@ -52,9 +61,10 @@ const handleChange = (e) => {
 
   return (
     <>
-    <div className="m-7">
+    <div className="m-7 ml-75 justify-center">
         <p>Publica tu libro</p>
-        <form onSubmit={handleSubmit} className="mt-5 flex">
+        <form onSubmit={handleSubmit} className="mt-5">
+          <div className="flex gap-50">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-0.5">
               <p>Nombre del libro</p>
@@ -70,7 +80,16 @@ const handleChange = (e) => {
             </div>
             <div>
               <p>Género</p>
-              <input name="genero" onChange={handleChange} className="border-2 rounded-sm" />
+              <select name="genero" value={bookInfo.genero} onChange={handleChange} className="border-2 rounded-sm">
+                <option>Todos</option>
+                {
+                  generos.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.genero}
+                    </option>
+                  ))
+                }
+              </select>
             </div>
             <div>
               <p>Precio</p>
@@ -80,19 +99,28 @@ const handleChange = (e) => {
               <p>Descripción</p>
               <input name="descripcion" onChange={handleChange} className="border-2 rounded-sm" />
             </div>
+            <div className="flex flex-col">
+              <button type="submit" className="bg-blue-600 text-white rounded-sm p-2">Subir libro</button>
+              <button
+                type="button" 
+                onClick={() => navigate("/profile")}
+                className="bg-gray-400 text-white rounded-sm p-2 mt-2"
+              >
+                Cancelar
+              </button>
+          </div>
           </div>
           <div className="flex flex-col">
             <p>Imagen</p>
+            {preview && (
+              <div>
+                <p>Vista previa:</p>
+                <img src={preview} alt="img" className="w-sm"/>
+              </div>
+            )}
             <input type="file" name="img" onChange={handleChange} />
-            <button type="submit" className="bg-blue-600 text-white rounded-sm p-2 w-1/5">Subir libro</button>
-            <button
-              type="button" 
-              onClick={() => navigate("/profile")}
-              className="bg-gray-400 text-white rounded-sm p-2 w-1/5 mt-2"
-            >
-              Cancelar
-            </button>
 
+          </div>
           </div>
         </form>
       </div>

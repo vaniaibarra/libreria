@@ -12,7 +12,8 @@ function Register () {
     region: "",
     contraseña: ""
   })
-  const { register } = useAuth()
+  const { register } = useAuth();
+  
 
   const handleChange = (e) => {
     setCredentials((prev) => ({ ...prev, [e.target.name]: e.target.value }));

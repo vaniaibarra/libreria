@@ -1,24 +1,32 @@
-function BookDetail({ book }) {
-  if (!book) {
-    return <p>No se encontró el libro.</p>;
-  }
+import { useParams } from "react-router-dom";
+import { useAuth } from "../../context/Context";
+import { useEffect } from "react";
+import format from "../../utils/format";
+
+function BookDetail({book}) {
+  const {generos} = useAuth();
+
+
+  const generoNombre = generos.length
+  ? generos.find(g => g.id === book.genero)?.genero || "Sin género"
+  : "Cargando...";
+
 
   return (
-    <>
-      <div className="flex gap-4">
-        <div>
-          <img src={book.img} alt={book.title} className="w-48 h-auto object-cover" />
-        </div>
-        <div>
-          <p className="text-xl font-bold">{book.title}</p>
-          <p className="text-gray-700">{book.author}</p>
-          <p className="text-gray-500">{book.year}</p>
+      <div className="flex gap-4 w-2xl">
+        <div className="flex gap-5">
+          <div>
+            <img src={`http://localhost:3000/uploads/${book.img}`} alt={book.nombre} className="w-48 h-auto object-cover" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-xl font-bold">{book.nombre}</p>
+            <p className="text-gray-700">{book.autor}</p>
+            <p>{format(Number(book.precio))}</p>
+            <p>{generoNombre}</p>
+            <p>{book.descripcion}</p>
+          </div>
         </div>
       </div>
-      <div className="mt-4">
-        <p>{book.description}</p>
-      </div>
-    </>
   );
 }
 export default BookDetail;

@@ -9,6 +9,7 @@ import ProtectedRoutes from "./ProtectedRoutes";
 import Register from "../pages/Register";
 import Edit from "../pages/Edit";
 import UploadBook from "../pages/UploadBook";
+import EditarPublicacion from "../pages/EditarPublicacion";
 
 function AppRoutes() {
   return (
@@ -19,6 +20,9 @@ function AppRoutes() {
       <Route path="/edit" element={ <Edit/> } />
       <Route path="/upload" element={ <UploadBook/> }/>
       <Route path="/tienda" element={<BookStore/>}/>
+      <Route path="/tienda/:id" element={<BookDetail/>}/>
+      <Route path="/profile/:id" element={<BookDetail/>}/>
+      <Route path="/editarPublicacion/:id" element={<EditarPublicacion/>}/>
 
       
       <Route
